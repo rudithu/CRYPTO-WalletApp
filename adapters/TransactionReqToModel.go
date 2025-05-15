@@ -9,7 +9,7 @@ import (
 )
 
 // Converts a TransactionRequest into a Transaction model
-func (r *models.TransactionRequest) ToModel() *models.Transaction {
+func ToModel(r *models.TransactionRequest) *models.Transaction {
 	var counterpartyWalletId sql.NullInt64
 	if r.DestinationWalletID != nil {
 		counterpartyWalletId = sql.NullInt64{

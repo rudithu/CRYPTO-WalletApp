@@ -32,7 +32,7 @@ func CreateTransaction(db *sql.DB, t *Transaction) error {
 		t.Type,
 		t.Amount,
 		t.CounterpartyWalletId,
-		time.Now(), // or use t.CreatedAt if manually provided
+		time.Now(),
 	).Scan(&t.ID, &t.CreatedAt)
 
 	return err
