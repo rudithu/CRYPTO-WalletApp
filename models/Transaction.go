@@ -19,24 +19,6 @@ type Transaction struct {
 	CreatedAt            time.Time       `json:"created_at`
 }
 
-func CreateTransaction(db *sql.DB, t *Transaction) error {
-	query := `
-		INSERT INTO transactions (wallet_id, type, amount, counterparty_wallet_id)
-		VALUES ($1, $2, $3, $4)
-		RETURNING id, created_at
-	`
-
-	err := db.QueryRow(
-		query,
-		t.WalletId,
-		t.Type,
-		t.Amount,
-		t.CounterpartyWalletId,
-	).Scan(&t.ID, &t.CreatedAt)
-
-	return err
-}
-
 func GetTransactionsByWalletIDs(db *sql.DB, walletIDs []int64) ([]Transaction, error) {
 
 	if walletIDs == nil {

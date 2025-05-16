@@ -78,20 +78,6 @@ func GetDefaultWalletOrCurrencyByUserID(db *sql.DB, userID int64, currency strin
 
 }
 
-func GetWalleBalanceById(db *sql.DB, walletId int64) (decimal.Decimal, error) {
-	query := `
-		SELECT balance
-		FROM wallets
-		WHERE id = $1
-	`
-	var balance decimal.Decimal
-	err := db.QueryRow(query, walletId).Scan(&balance)
-	if err != nil {
-		return decimal.Zero, err
-	}
-	return balance, nil
-}
-
 func GetWalletById(db *sql.DB, walletId int64) (*Wallet, error) {
 	query := `
 		SELECT id, user_id, balance, currency, type, is_default, created_at
@@ -169,16 +155,4 @@ func GetWalletByUserIDs(db *sql.DB, userIDs []int64) ([]Wallet, error) {
 	}
 
 	return wallets, nil
-}
-
-func IncrementBalanceByWalletID(db *sql.DB, walletID int64, delta decimal.Decimal) error {
-	query := `UPDATE wallets SET balance = balance + $1 WHERE id = $2`
-	_, err := db.Exec(query, delta, walletID)
-	return err
-}
-
-func UpdateBalanceByWalletID(db *sql.DB, walletID int64, newBalance decimal.Decimal) error {
-	query := `UPDATE wallets SET balance = $1 WHERE id = $2`
-	_, err := db.Exec(query, newBalance, walletID)
-	return err
 }

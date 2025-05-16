@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/rudithu/CRYPTO-WalletApp/db"
 	"github.com/rudithu/CRYPTO-WalletApp/models"
 	"github.com/shopspring/decimal"
 )
@@ -109,11 +110,10 @@ func (h *HandlerDB) HandleTransferMoney(w http.ResponseWriter, r *http.Request) 
 		CounterpartyWalletId: sql.NullInt64{Int64: walletId, Valid: true},
 	}
 
-	models.CreateTransaction(h.DB, &txnOut)
-	models.UpdateBalanceByWalletID(h.DB, walletId, sourceWallet.Balance.Sub(msg.Amount))
-
-	models.CreateTransaction(h.DB, &txnIn)
-	models.IncrementBalanceByWalletID(h.DB, targetWallet.ID, targetAmount)
+	err = db.TransferUpdate(h.DB, sourceWallet.Balance, &txnOut, &txnIn)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 
 	w.WriteHeader(http.StatusNoContent)
 

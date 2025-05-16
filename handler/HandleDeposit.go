@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/rudithu/CRYPTO-WalletApp/db"
 	"github.com/rudithu/CRYPTO-WalletApp/models"
 )
 
@@ -37,18 +38,10 @@ func (h *HandlerDB) HandleDepositMoney(w http.ResponseWriter, r *http.Request) {
 		Type:     models.TxnTypeDeposit,
 	}
 
-	err = models.CreateTransaction(h.DB, &t)
+	err = db.DepositUpdate(h.DB, &t)
 	if err != nil {
-		http.Error(w, "Error Creating Transaction", http.StatusInternalServerError)
-		return
-	}
-
-	err = models.IncrementBalanceByWalletID(h.DB, walletId, msg.Amount)
-	if err != nil {
-		http.Error(w, "Error Updating Wallet Balance", http.StatusInternalServerError)
-		return
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
 	w.WriteHeader(http.StatusNoContent)
-
 }
