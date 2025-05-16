@@ -66,7 +66,28 @@ func (h *HandlerDB) HandleTxHistory(w http.ResponseWriter, r *http.Request) {
 		txns = transactions
 	}
 
-	resp := adapters.ToWalletDetailsResp(userInfo, selectedWallets, txns)
+	var ccys []string
+	for _, sw := range selectedWallets {
+		if sw.Currency != models.BaseCcy {
+			ccys = append(ccys, sw.Currency)
+		}
+	}
+
+	ccyMap := make(map[string]models.CcyRateToBaseCcy)
+	if len(ccys) > 0 {
+		rates, err := models.GetCcyRateToBaseCcy(h.DB, ccys)
+		if err != nil {
+			http.Error(w, "error to get currency rate", http.StatusInternalServerError)
+			return
+		}
+
+		for _, rate := range rates {
+			ccyMap[rate.Ccy] = rate
+		}
+
+	}
+
+	resp := adapters.ToWalletDetailsResp(userInfo, selectedWallets, txns, ccyMap)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp)

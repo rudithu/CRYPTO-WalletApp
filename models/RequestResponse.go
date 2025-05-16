@@ -35,11 +35,16 @@ type TransactionSummaryItem struct {
 	Time                 time.Time       `json:"time"`
 }
 
+type Total struct {
+	Currency string          `json:"currency"`
+	Amount   decimal.Decimal `json:"amount"`
+}
+
 // Req: userID
 type WalletBalanceResponse struct {
-	UserInfo     UserInfo        `json:"user_info"`
-	Wallets      []WalletDetail  `json:"wallets"`
-	TotalBalance decimal.Decimal `json:"total_balance"`
+	UserInfo UserInfo       `json:"user_info"`
+	Wallets  []WalletDetail `json:"wallets"`
+	Balance  *Total         `json:"total,omitempty"`
 }
 
 func (tr *TransactionRequest) ValidateRequest(txnType string) error {

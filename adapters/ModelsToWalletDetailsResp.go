@@ -5,11 +5,12 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-func ToWalletDetailsResp(user *models.User, wallets []models.Wallet, txns []models.Transaction) models.WalletBalanceResponse {
+func ToWalletDetailsResp(user *models.User, wallets []models.Wallet, txns []models.Transaction, ccyMap map[string]models.CcyRateToBaseCcy) models.WalletBalanceResponse {
 	var walletDetails []models.WalletDetail
 	totalBalance := decimal.NewFromInt(0)
 
 	grouped := make(map[int64][]models.TransactionSummaryItem)
+	missingRate := false
 
 	if txns != nil {
 		for _, tx := range txns {
@@ -41,19 +42,41 @@ func ToWalletDetailsResp(user *models.User, wallets []models.Wallet, txns []mode
 			Balance:      w.Balance,
 			Transactions: grouped[w.ID],
 		})
-		totalBalance = totalBalance.Add(w.Balance)
+
+		var currentAmount decimal.Decimal
+		if w.Currency != models.BaseCcy {
+			val, ok := ccyMap[w.Currency]
+			if ok {
+				currentAmount = w.Balance.Div(val.Rate)
+			} else {
+				missingRate = true
+			}
+		} else {
+			currentAmount = w.Balance
+		}
+		totalBalance = totalBalance.Add(currentAmount)
 	}
 
 	if walletDetails == nil {
 		walletDetails = make([]models.WalletDetail, 0)
 	}
 
+	var tt *models.Total
+	if missingRate {
+		tt = nil
+	} else {
+		tt = &models.Total{
+			Currency: models.BaseCcy,
+			Amount:   totalBalance,
+		}
+
+	}
 	return models.WalletBalanceResponse{
 		UserInfo: models.UserInfo{
 			ID:   user.ID,
 			Name: user.Name,
 		},
-		Wallets:      walletDetails,
-		TotalBalance: totalBalance,
+		Wallets: walletDetails,
+		Balance: tt,
 	}
 }
