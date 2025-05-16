@@ -7,7 +7,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/rudithu/CRYPTO-WalletApp/models"
-	"github.com/shopspring/decimal"
 )
 
 func (h *HandlerDB) HandleDepositMoney(w http.ResponseWriter, r *http.Request) {
@@ -20,21 +19,22 @@ func (h *HandlerDB) HandleDepositMoney(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var msg models.TransactionRequest
+
 	err = json.NewDecoder(r.Body).Decode(&msg)
 	if err != nil {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
 
-	if msg.Amount.LessThanOrEqual(decimal.Zero) {
-		http.Error(w, "Deposit Amount is not allowed", http.StatusBadRequest)
+	if err = msg.ValidateRequest(models.TxnTypeDeposit); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	t := models.Transaction{
 		WalletId: walletId,
 		Amount:   msg.Amount,
-		Type:     "deposit",
+		Type:     models.TxnTypeDeposit,
 	}
 
 	err = models.CreateTransaction(h.DB, &t)

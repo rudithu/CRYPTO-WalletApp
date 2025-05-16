@@ -13,25 +13,32 @@ import (
 type Wallet struct {
 	ID        int64           `json:"id"`
 	UserId    int64           `json:"user_id"`
-	Currency  string          `json:"currency"`
 	Type      string          `json:"currency"`
+	IsDefault bool            `json:"is_default"`
+	Currency  string          `json:"currency"`
 	Balance   decimal.Decimal `json:"balance"`
 	CreatedAt time.Time       `json:"created_at`
 }
 
-func GetDefaultWalletByUserID(db *sql.DB, userID int64, walletType string) (*Wallet, error) {
-
-	if walletType == "" {
-		walletType = "saving"
-	}
+func GetDefaultWalletOrCurrencyByUserID(db *sql.DB, userID int64, currency string) ([]Wallet, error) {
 
 	query := `
-		SELECT id, user_id, balance, currency, type, created_at
+		SELECT id, user_id, balance, currency, type, is_default, created_at
 		FROM wallets
-		WHERE user_id = $1 AND type = $2
+		WHERE user_id = $1 
+		AND (is_default = TRUE %s)
 		ORDER BY created_at DESC
 	`
-	rows, err := db.Query(query, userID, walletType)
+
+	var rows *sql.Rows
+	var err error
+
+	if currency != "" {
+		rows, err = db.Query(fmt.Sprintf(query, "OR currency = $2 "), userID, currency)
+	} else {
+		rows, err = db.Query(fmt.Sprintf(query, ""), userID)
+	}
+
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
@@ -50,6 +57,7 @@ func GetDefaultWalletByUserID(db *sql.DB, userID int64, walletType string) (*Wal
 			&w.Balance,
 			&w.Currency,
 			&w.Type,
+			&w.IsDefault,
 			&w.CreatedAt,
 		)
 		if err != nil {
@@ -58,17 +66,15 @@ func GetDefaultWalletByUserID(db *sql.DB, userID int64, walletType string) (*Wal
 		wallets = append(wallets, w)
 
 	}
+
 	if err = rows.Err(); err != nil {
 		return nil, err
 	}
 
-	if len(wallets) > 1 {
-		return nil, fmt.Errorf("expected 1 wallet but found %d", len(wallets))
-	}
 	if len(wallets) == 0 {
 		return nil, nil
 	}
-	return &wallets[0], nil
+	return wallets, nil
 
 }
 
@@ -83,9 +89,29 @@ func GetWalleBalanceById(db *sql.DB, walletId int64) (decimal.Decimal, error) {
 	if err != nil {
 		return decimal.Zero, err
 	}
-
 	return balance, nil
+}
 
+func GetWalletById(db *sql.DB, walletId int64) (*Wallet, error) {
+	query := `
+		SELECT id, user_id, balance, currency, type, is_default, created_at
+		FROM wallets
+		WHERE id = $1
+	`
+	var wallet Wallet
+	err := db.QueryRow(query, walletId).Scan(
+		&wallet.ID,
+		&wallet.UserId,
+		&wallet.Balance,
+		&wallet.Currency,
+		&wallet.Type,
+		&wallet.IsDefault,
+		&wallet.CreatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &wallet, nil
 }
 
 func GetWalletByUserIDs(db *sql.DB, userIDs []int64) ([]Wallet, error) {
@@ -103,7 +129,7 @@ func GetWalletByUserIDs(db *sql.DB, userIDs []int64) ([]Wallet, error) {
 	}
 
 	query := fmt.Sprintf(`
-		SELECT id, user_id, balance, currency, type, created_at
+		SELECT id, user_id, balance, currency, type, is_default, created_at
 		FROM wallets
 		WHERE user_id IN (%s)
 		ORDER BY created_at DESC
@@ -129,6 +155,7 @@ func GetWalletByUserIDs(db *sql.DB, userIDs []int64) ([]Wallet, error) {
 			&w.Balance,
 			&w.Currency,
 			&w.Type,
+			&w.IsDefault,
 			&w.CreatedAt,
 		)
 		if err != nil {

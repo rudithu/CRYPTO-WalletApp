@@ -25,6 +25,11 @@ func (h *HandlerDB) HandleWithdrawMoney(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	if err = msg.ValidateRequest(models.TxnTypeWithdraw); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	balance, err := models.GetWalleBalanceById(h.DB, walletId)
 
 	if balance.LessThan(msg.Amount) {
@@ -35,7 +40,7 @@ func (h *HandlerDB) HandleWithdrawMoney(w http.ResponseWriter, r *http.Request) 
 	t := models.Transaction{
 		WalletId: walletId,
 		Amount:   msg.Amount,
-		Type:     "withdraw",
+		Type:     models.TxnTypeWithdraw,
 	}
 
 	err = models.CreateTransaction(h.DB, &t)

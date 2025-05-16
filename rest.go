@@ -26,6 +26,7 @@ func main() {
 	r.HandleFunc("/users/{id}/wallets/transactions", dbHandler.HandleTxHistory).Methods("GET")
 	r.HandleFunc("/wallets/{id}/deposit", dbHandler.HandleDepositMoney).Methods("POST")
 	r.HandleFunc("/wallets/{id}/withdraw", dbHandler.HandleWithdrawMoney).Methods("POST")
+	r.HandleFunc("/wallets/{id}/transfer", dbHandler.HandleTransferMoney).Methods("POST")
 
 	/*
 		GET /users/{id}/transactions?type=deposit

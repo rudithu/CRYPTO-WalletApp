@@ -22,9 +22,8 @@ func GetCcyRate(db *sql.DB, fromCcy string, toCcy string) (decimal.Decimal, erro
 		FROM ccy_conversion
 		WHERE from_ccy = $1 AND to_ccy in ($2, $3)
 	`
-	baseCcy := "USD"
 
-	rows, err := db.Query(query, baseCcy, fromCcy, toCcy)
+	rows, err := db.Query(query, BaseCcy, fromCcy, toCcy)
 	if err != nil {
 		return decimal.Zero, err
 	}
@@ -37,7 +36,8 @@ func GetCcyRate(db *sql.DB, fromCcy string, toCcy string) (decimal.Decimal, erro
 		var rate decimal.Decimal
 		var toCurrency string
 
-		err := rows.Scan(&rate, &toCcy)
+		err := rows.Scan(&toCurrency, &rate)
+
 		if err != nil {
 			return decimal.Zero, err
 		}
@@ -47,6 +47,12 @@ func GetCcyRate(db *sql.DB, fromCcy string, toCcy string) (decimal.Decimal, erro
 		} else if toCurrency == fromCcy {
 			fromRate = rate
 		}
+	}
+
+	if BaseCcy == toCcy {
+		toRate = decimal.NewFromInt(1)
+	} else if BaseCcy == fromCcy {
+		fromRate = decimal.NewFromInt(1)
 	}
 
 	if toRate.IsZero() || fromRate.IsZero() {

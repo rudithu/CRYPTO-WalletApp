@@ -13,11 +13,20 @@ func ToWalletDetailsResp(user *models.User, wallets []models.Wallet, txns []mode
 
 	if txns != nil {
 		for _, tx := range txns {
+
+			var counterId *int64
+			if tx.CounterpartyWalletId.Valid {
+				counterId = &tx.CounterpartyWalletId.Int64
+			} else {
+				counterId = nil
+			}
+
 			grouped[tx.WalletId] = append(grouped[tx.WalletId], models.TransactionSummaryItem{
-				ID:     tx.ID,
-				Type:   tx.Type,
-				Amount: tx.Amount,
-				Time:   tx.CreatedAt,
+				ID:                   tx.ID,
+				Type:                 tx.Type,
+				Amount:               tx.Amount,
+				Time:                 tx.CreatedAt,
+				CounterpartyWalletID: counterId,
 			})
 		}
 	}
@@ -26,6 +35,7 @@ func ToWalletDetailsResp(user *models.User, wallets []models.Wallet, txns []mode
 
 		walletDetails = append(walletDetails, models.WalletDetail{
 			ID:           w.ID,
+			IsDefault:    w.IsDefault,
 			Currency:     w.Currency,
 			Type:         w.Type,
 			Balance:      w.Balance,
