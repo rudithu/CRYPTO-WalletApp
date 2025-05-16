@@ -30,9 +30,13 @@ func (h *HandlerDB) HandleWithdrawMoney(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	balance, err := models.GetWalleBalanceById(h.DB, walletId)
+	wallet, err := models.GetWalletById(h.DB, walletId)
+	if err != nil {
+		http.Error(w, "failed to get wallet info", http.StatusInternalServerError)
+		return
+	}
 
-	if balance.LessThan(msg.Amount) {
+	if wallet.Balance.LessThan(msg.Amount) {
 		http.Error(w, "Withdrawal is not allowed", http.StatusBadRequest)
 		return
 	}
@@ -49,7 +53,7 @@ func (h *HandlerDB) HandleWithdrawMoney(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	err = models.UpdateBalanceByWalletID(h.DB, walletId, balance.Sub(msg.Amount))
+	err = models.UpdateBalanceByWalletID(h.DB, walletId, wallet.Balance.Sub(msg.Amount))
 	if err != nil {
 		http.Error(w, "Error Updating Wallet Balance", http.StatusInternalServerError)
 		return
