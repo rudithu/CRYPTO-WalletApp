@@ -11,7 +11,7 @@ import (
 	"github.com/rudithu/CRYPTO-WalletApp/models"
 )
 
-func (h *HandlerDB) HandleBalance(w http.ResponseWriter, r *http.Request) {
+func (h *HandlerDB) HandleTxHistory(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	userIdStr := vars["id"]
@@ -28,9 +28,8 @@ func (h *HandlerDB) HandleBalance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userIds := make([]int64, 1)
+	var userIds []int64 = make([]int64, 1)
 	userIds[0] = userId
-
 	wallets, err := models.GetWalletByUserIDs(h.DB, userIds)
 	if err != nil {
 		http.Error(w, "Error Getting Wallet Info", http.StatusInternalServerError)
@@ -52,7 +51,21 @@ func (h *HandlerDB) HandleBalance(w http.ResponseWriter, r *http.Request) {
 		selectedWallets = wallets
 	}
 
-	txns := make([]models.Transaction, 0)
+	var walletIds []int64
+	for _, w := range selectedWallets {
+		walletIds = append(walletIds, w.ID)
+	}
+
+	var txns []models.Transaction
+	if walletIds != nil {
+		transactions, err := models.GetTransactionsByWalletIDs(h.DB, walletIds)
+		if err != nil {
+			http.Error(w, "Error Getting Transaction Details", http.StatusInternalServerError)
+			return
+		}
+		txns = transactions
+	}
+
 	resp := adapters.ToWalletDetailsResp(userInfo, selectedWallets, txns)
 
 	w.Header().Set("Content-Type", "application/json")

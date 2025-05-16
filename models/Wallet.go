@@ -19,6 +19,75 @@ type Wallet struct {
 	CreatedAt time.Time       `json:"created_at`
 }
 
+func GetDefaultWalletByUserID(db *sql.DB, userID int64, walletType string) (*Wallet, error) {
+
+	if walletType == "" {
+		walletType = "saving"
+	}
+
+	query := `
+		SELECT id, user_id, balance, currency, type, created_at
+		FROM wallets
+		WHERE user_id = $1 AND type = $2
+		ORDER BY created_at DESC
+	`
+	rows, err := db.Query(query, userID, walletType)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var wallets []Wallet
+	for rows.Next() {
+		var w Wallet
+		err := rows.Scan(
+			&w.ID,
+			&w.UserId,
+			&w.Balance,
+			&w.Currency,
+			&w.Type,
+			&w.CreatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		wallets = append(wallets, w)
+
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	if len(wallets) > 1 {
+		return nil, fmt.Errorf("expected 1 wallet but found %d", len(wallets))
+	}
+	if len(wallets) == 0 {
+		return nil, nil
+	}
+	return &wallets[0], nil
+
+}
+
+func GetWalleBalanceById(db *sql.DB, walletId int64) (decimal.Decimal, error) {
+	query := `
+		SELECT balance
+		FROM wallets
+		WHERE id = $1
+	`
+	var balance decimal.Decimal
+	err := db.QueryRow(query, walletId).Scan(&balance)
+	if err != nil {
+		return decimal.Zero, err
+	}
+
+	return balance, nil
+
+}
+
 func GetWalletByUserIDs(db *sql.DB, userIDs []int64) ([]Wallet, error) {
 
 	if userIDs == nil {
@@ -54,7 +123,7 @@ func GetWalletByUserIDs(db *sql.DB, userIDs []int64) ([]Wallet, error) {
 
 	for rows.Next() {
 		var w Wallet
-		rows.Scan(
+		err := rows.Scan(
 			&w.ID,
 			&w.UserId,
 			&w.Balance,
@@ -62,7 +131,9 @@ func GetWalletByUserIDs(db *sql.DB, userIDs []int64) ([]Wallet, error) {
 			&w.Type,
 			&w.CreatedAt,
 		)
-
+		if err != nil {
+			return nil, err
+		}
 		wallets = append(wallets, w)
 	}
 

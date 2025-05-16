@@ -21,8 +21,8 @@ type Transaction struct {
 
 func CreateTransaction(db *sql.DB, t *Transaction) error {
 	query := `
-		INSERT INTO transactions (wallet_id, type, amount, counterparty_wallet_id, created_at)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO transactions (wallet_id, type, amount, counterparty_wallet_id)
+		VALUES ($1, $2, $3, $4)
 		RETURNING id, created_at
 	`
 
@@ -32,7 +32,6 @@ func CreateTransaction(db *sql.DB, t *Transaction) error {
 		t.Type,
 		t.Amount,
 		t.CounterpartyWalletId,
-		time.Now(),
 	).Scan(&t.ID, &t.CreatedAt)
 
 	return err
@@ -52,7 +51,7 @@ func GetTransactionsByWalletIDs(db *sql.DB, walletIDs []int64) ([]Transaction, e
 		args[i] = id
 	}
 
-	query := fmt.Sprint(`
+	query := fmt.Sprintf(`
         SELECT id, wallet_id, type, amount, counterparty_wallet_id, created_at
         FROM transactions
         WHERE wallet_id in (%s)
