@@ -12,7 +12,11 @@ import (
 
 func main() {
 
-	database := db.Connnect()
+	database, err := db.Connnect()
+	if err != nil {
+		log.Fatal("failed to connect db")
+		return
+	}
 
 	r := mux.NewRouter()
 	routes.Route(database, r)
