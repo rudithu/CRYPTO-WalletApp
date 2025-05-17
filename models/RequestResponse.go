@@ -20,7 +20,7 @@ type UserInfo struct {
 
 type WalletDetail struct {
 	ID           int64                    `json:"id"`
-	IsDefault    bool                     `json:"is_default`
+	IsDefault    bool                     `json:"is_default"`
 	Type         string                   `json:"type"`
 	Currency     string                   `json:"currency"`
 	Balance      decimal.Decimal          `json:"balance"`

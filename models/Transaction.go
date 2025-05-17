@@ -16,7 +16,7 @@ type Transaction struct {
 	Type                 string          `json:"type"`
 	Amount               decimal.Decimal `json:"amount"`
 	CounterpartyWalletId sql.NullInt64   `json:"counterparty_wallet_id"`
-	CreatedAt            time.Time       `json:"created_at`
+	CreatedAt            time.Time       `json:"created_at"`
 }
 
 func GetTransactionsByWalletIDs(db *sql.DB, walletIDs []int64) ([]Transaction, error) {

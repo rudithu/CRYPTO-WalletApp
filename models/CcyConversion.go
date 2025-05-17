@@ -13,7 +13,7 @@ type CcyConversion struct {
 	FromCcy   string          `json:"from_ccy"`
 	ToCcy     string          `json:"to_ccy"`
 	Rate      decimal.Decimal `json:"rate"`
-	CreatedAt time.Time       `json:created_at`
+	CreatedAt time.Time       `json:"created_at"`
 }
 
 type CcyRateToBaseCcy struct {
@@ -98,7 +98,7 @@ func GetCcyRate(db *sql.DB, fromCcy string, toCcy string) (decimal.Decimal, erro
 	}
 
 	if toRate.IsZero() || fromRate.IsZero() {
-		return decimal.Zero, fmt.Errorf("missing conversion rate for %s or %s.", fromCcy, toCcy)
+		return decimal.Zero, fmt.Errorf("missing conversion rate for %s or %s", fromCcy, toCcy)
 	}
 
 	finalRate := toRate.Div(fromRate)

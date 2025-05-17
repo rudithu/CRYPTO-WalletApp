@@ -13,11 +13,11 @@ import (
 type Wallet struct {
 	ID        int64           `json:"id"`
 	UserId    int64           `json:"user_id"`
-	Type      string          `json:"currency"`
+	Type      string          `json:"type"`
 	IsDefault bool            `json:"is_default"`
 	Currency  string          `json:"currency"`
 	Balance   decimal.Decimal `json:"balance"`
-	CreatedAt time.Time       `json:"created_at`
+	CreatedAt time.Time       `json:"created_at"`
 }
 
 func GetDefaultWalletOrCurrencyByUserID(db *sql.DB, userID int64, currency string) ([]Wallet, error) {

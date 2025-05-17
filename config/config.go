@@ -32,7 +32,7 @@ func GetConfig() (map[string]string, error) {
 		err := viper.ReadInConfig()
 		if err != nil {
 			log.Fatal("Error reading config file:", err)
-			configErr = fmt.Errorf("Error reading config file:", err)
+			configErr = fmt.Errorf("Error reading config file: %s", err.Error())
 			return
 		}
 		fmt.Println("config laoded")
