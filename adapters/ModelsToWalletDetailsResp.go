@@ -12,24 +12,22 @@ func ToWalletDetailsResp(user *models.User, wallets []models.Wallet, txns []mode
 	grouped := make(map[int64][]models.TransactionSummaryItem)
 	missingRate := false
 
-	if txns != nil {
-		for _, tx := range txns {
+	for _, tx := range txns {
 
-			var counterId *int64
-			if tx.CounterpartyWalletId.Valid {
-				counterId = &tx.CounterpartyWalletId.Int64
-			} else {
-				counterId = nil
-			}
-
-			grouped[tx.WalletId] = append(grouped[tx.WalletId], models.TransactionSummaryItem{
-				ID:                   tx.ID,
-				Type:                 tx.Type,
-				Amount:               tx.Amount,
-				Time:                 tx.CreatedAt,
-				CounterpartyWalletID: counterId,
-			})
+		var counterId *int64
+		if tx.CounterpartyWalletId.Valid {
+			counterId = &tx.CounterpartyWalletId.Int64
+		} else {
+			counterId = nil
 		}
+
+		grouped[tx.WalletId] = append(grouped[tx.WalletId], models.TransactionSummaryItem{
+			ID:                   tx.ID,
+			Type:                 tx.Type,
+			Amount:               tx.Amount,
+			Time:                 tx.CreatedAt,
+			CounterpartyWalletID: counterId,
+		})
 	}
 
 	for _, w := range wallets {
@@ -61,11 +59,11 @@ func ToWalletDetailsResp(user *models.User, wallets []models.Wallet, txns []mode
 		walletDetails = make([]models.WalletDetail, 0)
 	}
 
-	var tt *models.Total
+	var total *models.Total
 	if missingRate {
-		tt = nil
+		total = nil
 	} else {
-		tt = &models.Total{
+		total = &models.Total{
 			Currency: models.BaseCcy,
 			Amount:   totalBalance,
 		}
@@ -77,6 +75,6 @@ func ToWalletDetailsResp(user *models.User, wallets []models.Wallet, txns []mode
 			Name: user.Name,
 		},
 		Wallets: walletDetails,
-		Balance: tt,
+		Balance: total,
 	}
 }

@@ -95,6 +95,9 @@ func GetWalletById(db *sql.DB, walletId int64) (*Wallet, error) {
 		&wallet.CreatedAt,
 	)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return &wallet, nil
