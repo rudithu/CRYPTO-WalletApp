@@ -29,6 +29,6 @@ func Connnect() (*sql.DB, error) {
 	if err := db.Ping(); err != nil {
 		log.Fatal("DB not reachable:", err)
 	}
-
+	fmt.Println("db connected")
 	return db, nil
 }

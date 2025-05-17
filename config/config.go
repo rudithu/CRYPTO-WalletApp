@@ -15,11 +15,12 @@ var (
 )
 
 const (
-	DB_USER = "database.user"
-	DB_PASS = "database.password"
-	DB_HOST = "database.host"
-	DB_PORT = "database.port"
-	DB_NAME = "database.name"
+	DB_USER  = "database.user"
+	DB_PASS  = "database.password"
+	DB_HOST  = "database.host"
+	DB_PORT  = "database.port"
+	DB_NAME  = "database.name"
+	APP_PORT = "app.port"
 )
 
 func GetConfig() (map[string]string, error) {
@@ -34,7 +35,7 @@ func GetConfig() (map[string]string, error) {
 			configErr = fmt.Errorf("Error reading config file:", err)
 			return
 		}
-
+		fmt.Println("config laoded")
 		configMap = make(map[string]string)
 		for _, key := range viper.AllKeys() {
 			configMap[key] = viper.GetString(key)
