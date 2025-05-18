@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -24,6 +25,9 @@ func (h *HandlerDB) HandleBalance(w http.ResponseWriter, r *http.Request) {
 
 	userInfo, err := models.GetUserById(h.DB, userId)
 	if err != nil {
+
+		fmt.Println("Error Here 1", err.Error())
+
 		http.Error(w, "Error Getting Wallet Info", http.StatusInternalServerError)
 		return
 	}
@@ -33,6 +37,9 @@ func (h *HandlerDB) HandleBalance(w http.ResponseWriter, r *http.Request) {
 
 	wallets, err := models.GetWalletByUserIDs(h.DB, userIds)
 	if err != nil {
+
+		fmt.Println("Error Here 2", err.Error())
+
 		http.Error(w, "Error Getting Wallet Info", http.StatusInternalServerError)
 		return
 	}
@@ -63,6 +70,9 @@ func (h *HandlerDB) HandleBalance(w http.ResponseWriter, r *http.Request) {
 	if len(ccys) > 0 {
 		rates, err := models.GetCcyRateToBaseCcy(h.DB, ccys)
 		if err != nil {
+
+			fmt.Println("Error Here 3", err.Error())
+
 			http.Error(w, "error to get currency rate", http.StatusInternalServerError)
 			return
 		}

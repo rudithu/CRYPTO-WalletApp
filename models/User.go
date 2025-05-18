@@ -14,7 +14,7 @@ type User struct {
 
 func GetUserById(db *sql.DB, id int64) (*User, error) {
 	var user User
-	err := db.QueryRow("SELECT id, name, created_at from users where id=$1", id).Scan(&user.ID, &user.Name, &user.CreatedAt)
+	err := db.QueryRow("SELECT id, name, created_at FROM users where id=$1", id).Scan(&user.ID, &user.Name, &user.CreatedAt)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
