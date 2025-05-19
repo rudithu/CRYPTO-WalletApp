@@ -76,11 +76,11 @@ func NullInt64(val int64, valid bool) sql.NullInt64 {
 	return sql.NullInt64{Int64: val, Valid: valid}
 }
 
-func WithDBMock(t *testing.T, testFunc func(db *sql.DB, mock sqlmock.Sqlmock)) {
-	db, mock, err := sqlmock.New()
+func WithDBMock(t *testing.T, testFunc func(dbTest *sql.DB, mock sqlmock.Sqlmock)) {
+	dbTest, mock, err := sqlmock.New()
 	assert.Nil(t, err)
-	testFunc(db, mock)
-	defer db.Close()
+	testFunc(dbTest, mock)
+	defer dbTest.Close()
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unfulfilled expectations: %v", err)
 	}
