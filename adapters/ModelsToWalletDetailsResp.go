@@ -24,7 +24,7 @@ func ToWalletDetailsResp(user *models.User, wallets []models.Wallet, txns []mode
 		grouped[tx.WalletId] = append(grouped[tx.WalletId], models.TransactionSummaryItem{
 			ID:                   tx.ID,
 			Type:                 tx.Type,
-			Amount:               tx.Amount,
+			Amount:               models.MoneyDecimal{tx.Amount},
 			Time:                 tx.CreatedAt,
 			CounterpartyWalletID: counterId,
 		})
@@ -37,7 +37,7 @@ func ToWalletDetailsResp(user *models.User, wallets []models.Wallet, txns []mode
 			IsDefault:    w.IsDefault,
 			Currency:     w.Currency,
 			Type:         w.Type,
-			Balance:      w.Balance,
+			Balance:      models.MoneyDecimal{w.Balance},
 			Transactions: grouped[w.ID],
 		})
 
@@ -65,7 +65,7 @@ func ToWalletDetailsResp(user *models.User, wallets []models.Wallet, txns []mode
 	} else {
 		total = &models.Total{
 			Currency: models.BaseCcy,
-			Amount:   totalBalance,
+			Amount:   models.MoneyDecimal{totalBalance},
 		}
 
 	}

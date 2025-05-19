@@ -23,21 +23,21 @@ type WalletDetail struct {
 	IsDefault    bool                     `json:"is_default"`
 	Type         string                   `json:"type"`
 	Currency     string                   `json:"currency"`
-	Balance      decimal.Decimal          `json:"balance"`
+	Balance      MoneyDecimal             `json:"balance"`
 	Transactions []TransactionSummaryItem `json:"transactions,omitempty"`
 }
 
 type TransactionSummaryItem struct {
-	ID                   int64           `json:"id"`
-	Type                 string          `json:"type"`
-	Amount               decimal.Decimal `json:"amount"`
-	CounterpartyWalletID *int64          `json:"counterparty_wallet_id,omitempty"`
-	Time                 time.Time       `json:"time"`
+	ID                   int64        `json:"id"`
+	Type                 string       `json:"type"`
+	Amount               MoneyDecimal `json:"amount"`
+	CounterpartyWalletID *int64       `json:"counterparty_wallet_id,omitempty"`
+	Time                 time.Time    `json:"time"`
 }
 
 type Total struct {
-	Currency string          `json:"currency"`
-	Amount   decimal.Decimal `json:"amount"`
+	Currency string       `json:"currency"`
+	Amount   MoneyDecimal `json:"amount"`
 }
 
 // Req: userID
@@ -61,4 +61,15 @@ func (tr *TransactionRequest) ValidateRequest(txnType string) error {
 		}
 	}
 	return nil
+}
+
+// Custom type that wraps decimal.Decimal
+type MoneyDecimal struct {
+	decimal.Decimal
+}
+
+// MarshalJSON limits to 2 decimal places when marshaling to JSON
+func (d MoneyDecimal) MarshalJSON() ([]byte, error) {
+	// Format to 2 decimal places and quote it as a string
+	return []byte(fmt.Sprintf("\"%s\"", d.Decimal.StringFixed(2))), nil
 }

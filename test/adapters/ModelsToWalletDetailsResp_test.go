@@ -23,7 +23,7 @@ func TestToWalletDetailsResp(t *testing.T) {
 
 	assert.NotNil(t, resp.Wallets[0].Transactions)
 	assert.Equal(t, "USD", resp.Wallets[0].Currency)
-	assert.Equal(t, decimal.NewFromFloat(100.00), resp.Wallets[0].Balance)
+	assert.Equal(t, models.MoneyDecimal{decimal.NewFromFloat(100.00)}, resp.Wallets[0].Balance)
 	assert.NotNil(t, resp.Balance)
 
 	// Total balance should be USD 100 + (EUR 50 / 0.5) = 100 + 100 = 200
@@ -42,7 +42,7 @@ func TestToWalletDetailsResp_NoTotalBalance(t *testing.T) {
 
 	assert.Nil(t, resp.Wallets[1].Transactions)
 	assert.Equal(t, "EUR", resp.Wallets[1].Currency)
-	assert.Equal(t, decimal.NewFromFloat(50.00), resp.Wallets[1].Balance)
+	assert.Equal(t, models.MoneyDecimal{decimal.NewFromFloat(50.00)}, resp.Wallets[1].Balance)
 	assert.Nil(t, resp.Balance)
 }
 
