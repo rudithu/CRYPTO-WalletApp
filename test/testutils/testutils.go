@@ -71,7 +71,6 @@ func MockCcyMapWithRate() map[string]models.CcyRateToBaseCcy {
 	}
 }
 
-// Helper for sql.NullInt64 creation
 func NullInt64(val int64, valid bool) sql.NullInt64 {
 	return sql.NullInt64{Int64: val, Valid: valid}
 }

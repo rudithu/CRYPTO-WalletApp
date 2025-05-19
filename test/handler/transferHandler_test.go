@@ -162,39 +162,8 @@ func TestHandleTransferMoney_WalletToSameUser_NotSuccess(t *testing.T) {
 		sourceTxnAmount := decimal.NewFromFloat(50)
 		sourceWallet := getSourceWallet()
 
-		// targetUserId := int64(1)
-		// targetWalletId := int64(211)
-
 		//GetWalletById
 		testutils.MockGetWalletById(mock, sourceWallet)
-
-		//GetDefaultWalletOrCurrencyByUserID
-		// mock.ExpectQuery("SELECT id, user_id, balance, currency, type, is_default, created_at FROM wallets WHERE user_id = \\$1").
-		// 	WithArgs(targetUserId, sourceWallet.Currency).
-		// 	WillReturnRows(sqlmock.NewRows([]string{"id", "user_id", "balance", "currency", "type", "is_default", "created_at"}).
-		// 		AddRow(int64(210), targetUserId, decimal.NewFromFloat(100), "USD", "saving", true, time.Now()).
-		// 		AddRow(targetWalletId, targetUserId, decimal.NewFromFloat(50), "SGD", "saving", false, time.Now()))
-
-		// mock.ExpectBegin()
-
-		// //createTransaction source
-		// testutils.MockCreateTransaction(mock, models.Transaction{
-		// 	ID: int64(401), WalletId: sourceWallet.ID, Type: models.TxnTypeTransferOut,
-		// 	Amount: sourceTxnAmount, CounterpartyWalletId: sql.NullInt64{Valid: true, Int64: targetWalletId}, CreatedAt: time.Now()})
-
-		// //updateBalanceByWalletID source
-		// testutils.MockUpdateBalanceByWalletID(mock, sourceWallet.Balance.Sub(sourceTxnAmount), sourceWallet.ID)
-
-		// targetTxnAmount := sourceTxnAmount
-		// //createTransaction target
-		// testutils.MockCreateTransaction(mock, models.Transaction{
-		// 	ID: int64(402), WalletId: targetWalletId, Type: models.TxnTypeTransferIn,
-		// 	Amount: targetTxnAmount, CounterpartyWalletId: sql.NullInt64{Valid: true, Int64: sourceWallet.ID}, CreatedAt: time.Now()})
-
-		// //updateBalanceByWalletID target
-		// testutils.MockIncrementBalanceByWalletID(mock, targetTxnAmount, targetWalletId)
-
-		// mock.ExpectCommit()
 
 		requestBody := fmt.Sprintf(`{"amount": %s, "destination_user_id": %d}`, sourceTxnAmount.String(), sourceWallet.UserId)
 		req := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/wallets/%d/transfer", sourceWallet.ID), strings.NewReader(requestBody))

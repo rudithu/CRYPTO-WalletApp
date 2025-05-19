@@ -37,7 +37,6 @@ func TestHandleWithdrawMoney_Success(t *testing.T) {
 			CreatedAt: time.Now(),
 		})
 
-		// Expect transaction (begin)
 		mock.ExpectBegin()
 
 		testutils.MockGetBalance(mock, decimal.NewFromFloat(100.00), walletId)
@@ -52,7 +51,6 @@ func TestHandleWithdrawMoney_Success(t *testing.T) {
 			WithArgs(decimal.NewFromInt(50), walletId).
 			WillReturnResult(sqlmock.NewResult(0, 1))
 
-		// Expect commit
 		mock.ExpectCommit()
 
 		// Request body
