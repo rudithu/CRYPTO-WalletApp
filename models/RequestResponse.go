@@ -49,7 +49,7 @@ type WalletBalanceResponse struct {
 
 func (tr *TransactionRequest) ValidateRequest(txnType string) error {
 	if tr.Amount.LessThanOrEqual(decimal.Zero) {
-		return fmt.Errorf("amount must be greater than zero")
+		return fmt.Errorf("amount field is mandatory and it must be greater than zero")
 	}
 
 	if txnType == TxnTypeTransferOut || txnType == TxnTypeTransferIn {

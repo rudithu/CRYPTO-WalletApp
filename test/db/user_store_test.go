@@ -10,7 +10,6 @@ import (
 	"github.com/rudithu/CRYPTO-WalletApp/db"
 	"github.com/rudithu/CRYPTO-WalletApp/test/testutils"
 	"github.com/stretchr/testify/assert"
-	// Import your actual package here
 )
 
 func TestGetUserById_Success(t *testing.T) {
