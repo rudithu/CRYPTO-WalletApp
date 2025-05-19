@@ -1,4 +1,4 @@
-package models_test
+package db_test
 
 import (
 	"database/sql"
@@ -7,14 +7,14 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/rudithu/CRYPTO-WalletApp/models"
+	"github.com/rudithu/CRYPTO-WalletApp/db"
 	"github.com/rudithu/CRYPTO-WalletApp/test/testutils"
 	"github.com/stretchr/testify/assert"
 	// Import your actual package here
 )
 
 func TestGetUserById_Success(t *testing.T) {
-	testutils.WithDBMock(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+	testutils.WithDBMock(t, func(dbTest *sql.DB, mock sqlmock.Sqlmock) {
 		expectedID := int64(1)
 		expectedName := "Alice"
 		expectedTime := time.Now()
@@ -26,7 +26,7 @@ func TestGetUserById_Success(t *testing.T) {
 			WithArgs(expectedID).
 			WillReturnRows(rows)
 
-		user, err := models.GetUserById(db, expectedID)
+		user, err := db.GetUserById(dbTest, expectedID)
 		assert.NoError(t, err)
 		assert.NotNil(t, user)
 		assert.Equal(t, expectedID, user.ID)
@@ -36,11 +36,11 @@ func TestGetUserById_Success(t *testing.T) {
 }
 
 func TestGetUserById_NotFound(t *testing.T) {
-	testutils.WithDBMock(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+	testutils.WithDBMock(t, func(dbTest *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectQuery("SELECT id, name, created_at FROM users where id=\\$1").
 			WithArgs(int64(2)).
 			WillReturnError(sql.ErrNoRows)
-		user, err := models.GetUserById(db, 2)
+		user, err := db.GetUserById(dbTest, 2)
 		assert.NoError(t, err)
 		assert.Nil(t, user)
 	})
@@ -48,12 +48,12 @@ func TestGetUserById_NotFound(t *testing.T) {
 }
 
 func TestGetUserById_DBError(t *testing.T) {
-	testutils.WithDBMock(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+	testutils.WithDBMock(t, func(dbTest *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectQuery("SELECT id, name, created_at FROM users where id=\\$1").
 			WithArgs(int64(3)).
 			WillReturnError(errors.New("db failed"))
 
-		user, err := models.GetUserById(db, 3)
+		user, err := db.GetUserById(dbTest, 3)
 		assert.Error(t, err)
 		assert.Nil(t, user)
 	})

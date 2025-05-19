@@ -20,14 +20,15 @@ func (h *HandlerDB) HandleTransferMoney(w http.ResponseWriter, r *http.Request) 
 	//validate wallet id
 	walletId, err := strconv.ParseInt(walletIdStr, 10, 64)
 	if err != nil {
-		http.Error(w, "Invalid Wallet Id", http.StatusBadRequest)
+		http.Error(w, "invalid wallet id", http.StatusBadRequest)
+		return
 	}
 
 	//parse request body
 	var msg models.TransactionRequest
 	err = json.NewDecoder(r.Body).Decode(&msg)
 	if err != nil {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
+		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
 
@@ -37,9 +38,14 @@ func (h *HandlerDB) HandleTransferMoney(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	sourceWallet, err := models.GetWalletById(h.DB, walletId)
+	sourceWallet, err := db.GetWalletById(h.DB, walletId)
 	if err != nil {
 		http.Error(w, "failed to get source wallet info", http.StatusBadRequest)
+		return
+	}
+
+	if sourceWallet == nil {
+		http.Error(w, "source wallet not found", http.StatusNotFound)
 		return
 	}
 
@@ -58,7 +64,7 @@ func (h *HandlerDB) HandleTransferMoney(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		targetWallets, err := models.GetDefaultWalletOrCurrencyByUserID(h.DB, *msg.DestinationUserID, sourceWallet.Currency)
+		targetWallets, err := db.GetDefaultWalletOrCurrencyByUserID(h.DB, *msg.DestinationUserID, sourceWallet.Currency)
 		if err != nil {
 			http.Error(w, "failed to get target wallet", http.StatusBadRequest)
 			return
@@ -75,7 +81,7 @@ func (h *HandlerDB) HandleTransferMoney(w http.ResponseWriter, r *http.Request) 
 
 	} else if msg.DestinationWalletID != nil {
 		//transfer money to another wallet id
-		tWallet, err := models.GetWalletById(h.DB, *msg.DestinationWalletID)
+		tWallet, err := db.GetWalletById(h.DB, *msg.DestinationWalletID)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Failed to find target wallet %d", msg.DestinationWalletID), http.StatusBadRequest)
 			return
@@ -95,7 +101,7 @@ func (h *HandlerDB) HandleTransferMoney(w http.ResponseWriter, r *http.Request) 
 	if sourceWallet.Currency == targetWallet.Currency {
 		targetAmount = msg.Amount
 	} else {
-		rate, err := models.GetCcyRate(h.DB, sourceWallet.Currency, targetWallet.Currency)
+		rate, err := db.GetCcyRate(h.DB, sourceWallet.Currency, targetWallet.Currency)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -110,7 +116,7 @@ func (h *HandlerDB) HandleTransferMoney(w http.ResponseWriter, r *http.Request) 
 		CounterpartyWalletId: sql.NullInt64{Int64: walletId, Valid: true},
 	}
 
-	err = db.TransferUpdate(h.DB, sourceWallet.Balance, &txnOut, &txnIn)
+	err = db.TransferUpdate(h.DB, &txnOut, &txnIn)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

@@ -1,4 +1,4 @@
-package models_test
+package db_test
 
 import (
 	"database/sql"
@@ -6,14 +6,14 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/rudithu/CRYPTO-WalletApp/models"
+	"github.com/rudithu/CRYPTO-WalletApp/db"
 	"github.com/rudithu/CRYPTO-WalletApp/test/testutils"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGetDefaultWalletOrCurrencyByUserID_Succes(t *testing.T) {
 
-	testutils.WithDBMock(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+	testutils.WithDBMock(t, func(dbTest *sql.DB, mock sqlmock.Sqlmock) {
 
 		expectedWallet := testutils.MockWallets()[0]
 		ccy := "SGD"
@@ -25,7 +25,7 @@ func TestGetDefaultWalletOrCurrencyByUserID_Succes(t *testing.T) {
 			WithArgs(expectedWallet.UserId, ccy).
 			WillReturnRows(rows)
 
-		wallets, err := models.GetDefaultWalletOrCurrencyByUserID(db, expectedWallet.UserId, ccy)
+		wallets, err := db.GetDefaultWalletOrCurrencyByUserID(dbTest, expectedWallet.UserId, ccy)
 
 		assert.Nil(t, err)
 		assert.NotNil(t, wallets)
@@ -35,7 +35,7 @@ func TestGetDefaultWalletOrCurrencyByUserID_Succes(t *testing.T) {
 }
 
 func TestGetDefaultWalletOrCurrencyByUserID_NotFound(t *testing.T) {
-	testutils.WithDBMock(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+	testutils.WithDBMock(t, func(dbTest *sql.DB, mock sqlmock.Sqlmock) {
 		userId := int64(201)
 		ccy := "SGD"
 
@@ -43,7 +43,7 @@ func TestGetDefaultWalletOrCurrencyByUserID_NotFound(t *testing.T) {
 			WithArgs(userId, ccy).
 			WillReturnError(sql.ErrNoRows)
 
-		wallets, err := models.GetDefaultWalletOrCurrencyByUserID(db, userId, ccy)
+		wallets, err := db.GetDefaultWalletOrCurrencyByUserID(dbTest, userId, ccy)
 
 		assert.Nil(t, err)
 		assert.Nil(t, wallets)
@@ -51,7 +51,7 @@ func TestGetDefaultWalletOrCurrencyByUserID_NotFound(t *testing.T) {
 }
 
 func TestGetDefaultWalletOrCurrencyByUserID_DBError(t *testing.T) {
-	testutils.WithDBMock(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+	testutils.WithDBMock(t, func(dbTest *sql.DB, mock sqlmock.Sqlmock) {
 		userId := int64(201)
 		ccy := "SGD"
 
@@ -59,7 +59,7 @@ func TestGetDefaultWalletOrCurrencyByUserID_DBError(t *testing.T) {
 			WithArgs(userId, ccy).
 			WillReturnError(errors.New("db fail"))
 
-		wallets, err := models.GetDefaultWalletOrCurrencyByUserID(db, userId, ccy)
+		wallets, err := db.GetDefaultWalletOrCurrencyByUserID(dbTest, userId, ccy)
 
 		assert.NotNil(t, err)
 		assert.Equal(t, "db fail", err.Error())
@@ -69,7 +69,7 @@ func TestGetDefaultWalletOrCurrencyByUserID_DBError(t *testing.T) {
 
 func TestGetWalletById_Success(t *testing.T) {
 
-	testutils.WithDBMock(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+	testutils.WithDBMock(t, func(dbTest *sql.DB, mock sqlmock.Sqlmock) {
 
 		expectedWallet := testutils.MockWallets()[0]
 
@@ -80,7 +80,7 @@ func TestGetWalletById_Success(t *testing.T) {
 			WithArgs(expectedWallet.ID).
 			WillReturnRows(rows)
 
-		wallet, err := models.GetWalletById(db, expectedWallet.ID)
+		wallet, err := db.GetWalletById(dbTest, expectedWallet.ID)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, wallet)
@@ -96,7 +96,7 @@ func TestGetWalletById_Success(t *testing.T) {
 
 func TestGetWalletById_NotFound(t *testing.T) {
 
-	testutils.WithDBMock(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+	testutils.WithDBMock(t, func(dbTest *sql.DB, mock sqlmock.Sqlmock) {
 
 		rows := sqlmock.NewRows([]string{"id", "user_id", "balance", "currency", "type", "is_default", "created_at"})
 
@@ -104,7 +104,7 @@ func TestGetWalletById_NotFound(t *testing.T) {
 			WithArgs(int64(1)).
 			WillReturnRows(rows)
 
-		wallet, err := models.GetWalletById(db, int64(1))
+		wallet, err := db.GetWalletById(dbTest, int64(1))
 
 		assert.Nil(t, err)
 		assert.Nil(t, wallet)
@@ -114,12 +114,12 @@ func TestGetWalletById_NotFound(t *testing.T) {
 
 func TestGetWalletById_DBError(t *testing.T) {
 
-	testutils.WithDBMock(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+	testutils.WithDBMock(t, func(dbTest *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectQuery(`SELECT id, user_id, balance, currency, type, is_default, created_at FROM wallets WHERE id = \$1`).
 			WithArgs(int64(1)).
 			WillReturnError(errors.New("db failed"))
 
-		wallet, err := models.GetWalletById(db, int64(1))
+		wallet, err := db.GetWalletById(dbTest, int64(1))
 
 		assert.Nil(t, wallet)
 		assert.NotNil(t, err)
@@ -135,12 +135,12 @@ func TestGetWalletByUserIDs_Success(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id", "user_id", "balance", "currency", "type", "is_default", "created_at"}).
 		AddRow(expectedWallet.ID, expectedWallet.UserId, expectedWallet.Balance, expectedWallet.Currency, expectedWallet.Type, expectedWallet.IsDefault, expectedWallet.CreatedAt)
 
-	testutils.WithDBMock(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+	testutils.WithDBMock(t, func(dbTest *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectQuery("SELECT id, user_id, balance, currency, type, is_default, created_at FROM wallets WHERE user_id IN \\(.+\\) ORDER BY created_at DESC").
 			WithArgs(expectedWallet.UserId).
 			WillReturnRows(rows)
 
-		wallets, err := models.GetWalletByUserIDs(db, userIds)
+		wallets, err := db.GetWalletByUserIDs(dbTest, userIds)
 
 		assert.Nil(t, err)
 		assert.NotNil(t, wallets)
@@ -150,14 +150,14 @@ func TestGetWalletByUserIDs_Success(t *testing.T) {
 }
 
 func TestGetWalletByUserIDs_NotFound(t *testing.T) {
-	testutils.WithDBMock(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+	testutils.WithDBMock(t, func(dbTest *sql.DB, mock sqlmock.Sqlmock) {
 		userId := int64(201)
 		userIds := []int64{userId}
 		mock.ExpectQuery("SELECT id, user_id, balance, currency, type, is_default, created_at FROM wallets WHERE user_id IN \\(.+\\) ORDER BY created_at DESC").
 			WithArgs(201).
 			WillReturnError(sql.ErrNoRows)
 
-		wallets, err := models.GetWalletByUserIDs(db, userIds)
+		wallets, err := db.GetWalletByUserIDs(dbTest, userIds)
 		assert.Nil(t, err)
 		assert.Nil(t, wallets)
 
@@ -165,14 +165,14 @@ func TestGetWalletByUserIDs_NotFound(t *testing.T) {
 }
 
 func TestGetWalletByUserIDs_DBError(t *testing.T) {
-	testutils.WithDBMock(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+	testutils.WithDBMock(t, func(dbTest *sql.DB, mock sqlmock.Sqlmock) {
 		userId := int64(201)
 		userIds := []int64{userId}
 		mock.ExpectQuery("SELECT id, user_id, balance, currency, type, is_default, created_at FROM wallets WHERE user_id IN \\(.+\\) ORDER BY created_at DESC").
 			WithArgs(201).
 			WillReturnError(errors.New("db failed"))
 
-		wallets, err := models.GetWalletByUserIDs(db, userIds)
+		wallets, err := db.GetWalletByUserIDs(dbTest, userIds)
 		assert.NotNil(t, err)
 		assert.Equal(t, "db failed", err.Error())
 		assert.Nil(t, wallets)

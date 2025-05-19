@@ -1,4 +1,4 @@
-package models_test
+package db_test
 
 import (
 	"database/sql"
@@ -6,14 +6,14 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/rudithu/CRYPTO-WalletApp/models"
+	"github.com/rudithu/CRYPTO-WalletApp/db"
 	"github.com/rudithu/CRYPTO-WalletApp/test/testutils"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGetTransactionsByWalletIDs_Success(t *testing.T) {
 
-	testutils.WithDBMock(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+	testutils.WithDBMock(t, func(dbTest *sql.DB, mock sqlmock.Sqlmock) {
 
 		expectedTxn := testutils.MockTxns()[0]
 
@@ -24,7 +24,7 @@ func TestGetTransactionsByWalletIDs_Success(t *testing.T) {
 			WithArgs(expectedTxn.WalletId).
 			WillReturnRows(rows)
 
-		txns, err := models.GetTransactionsByWalletIDs(db, []int64{expectedTxn.WalletId})
+		txns, err := db.GetTransactionsByWalletIDs(dbTest, []int64{expectedTxn.WalletId})
 
 		assert.Nil(t, err)
 		assert.NotNil(t, txns)
@@ -36,7 +36,7 @@ func TestGetTransactionsByWalletIDs_Success(t *testing.T) {
 }
 
 func TestGetTransactionsByWalletIDs_NotFound(t *testing.T) {
-	testutils.WithDBMock(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+	testutils.WithDBMock(t, func(dbTest *sql.DB, mock sqlmock.Sqlmock) {
 		walletId := int64(23)
 
 		rows := sqlmock.NewRows([]string{"id", "wallet_id", "type", "amount", "counterparty_wallet_id", "created_at"})
@@ -45,7 +45,7 @@ func TestGetTransactionsByWalletIDs_NotFound(t *testing.T) {
 			WithArgs(walletId).
 			WillReturnRows(rows)
 
-		txns, err := models.GetTransactionsByWalletIDs(db, []int64{walletId})
+		txns, err := db.GetTransactionsByWalletIDs(dbTest, []int64{walletId})
 
 		assert.Nil(t, err)
 		assert.Nil(t, txns)
@@ -53,14 +53,14 @@ func TestGetTransactionsByWalletIDs_NotFound(t *testing.T) {
 }
 
 func TestGetTransactionsByWalletIDs_DBError(t *testing.T) {
-	testutils.WithDBMock(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
+	testutils.WithDBMock(t, func(dbTest *sql.DB, mock sqlmock.Sqlmock) {
 		walletId := int64(23)
 
 		mock.ExpectQuery("SELECT id, wallet_id, type, amount, counterparty_wallet_id, created_at FROM transactions WHERE wallet_id in \\(.+\\) ORDER BY created_at DESC").
 			WithArgs(walletId).
 			WillReturnError(errors.New("db failed"))
 
-		txns, err := models.GetTransactionsByWalletIDs(db, []int64{walletId})
+		txns, err := db.GetTransactionsByWalletIDs(dbTest, []int64{walletId})
 
 		assert.NotNil(t, err)
 		assert.Equal(t, "db failed", err.Error())

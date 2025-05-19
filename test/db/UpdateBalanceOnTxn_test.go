@@ -59,7 +59,7 @@ func TestDepositUpdate_FailCreateTxn(t *testing.T) {
 
 		err := db.DepositUpdate(sqlDB, &txn)
 		assert.NotNil(t, err)
-		assert.Equal(t, "failed to create transaction: update failed", err.Error())
+		assert.Equal(t, "failed to create incoming-transaction: update failed", err.Error())
 
 	})
 }
@@ -79,6 +79,10 @@ func TestWithdrawUpdate_Success(t *testing.T) {
 
 		mock.ExpectBegin()
 
+		mock.ExpectQuery("SELECT balance FROM wallets WHERE id = \\$1").
+			WithArgs(txn.WalletId).
+			WillReturnRows(sqlmock.NewRows([]string{"balance"}).AddRow(initialBalance))
+
 		mock.ExpectQuery("INSERT INTO transactions").
 			WithArgs(txn.WalletId, txn.Type, txn.Amount, txn.CounterpartyWalletId).
 			WillReturnRows(sqlmock.NewRows([]string{"id", "created_at"}).AddRow(123, time.Now()))
@@ -89,7 +93,7 @@ func TestWithdrawUpdate_Success(t *testing.T) {
 
 		mock.ExpectCommit()
 
-		err := db.WithdrawUpdate(sqlDB, initialBalance, txn)
+		err := db.WithdrawUpdate(sqlDB, txn)
 		assert.Nil(t, err)
 	})
 }
@@ -108,6 +112,10 @@ func TestWithdrawUpdate_FailToUpdateBalance(t *testing.T) {
 
 		mock.ExpectBegin()
 
+		mock.ExpectQuery("SELECT balance FROM wallets WHERE id = \\$1").
+			WithArgs(txn.WalletId).
+			WillReturnRows(sqlmock.NewRows([]string{"balance"}).AddRow(initialBalance))
+
 		mock.ExpectQuery("INSERT INTO transactions").
 			WithArgs(txn.WalletId, txn.Type, txn.Amount, txn.CounterpartyWalletId).
 			WillReturnRows(sqlmock.NewRows([]string{"id", "created_at"}).AddRow(123, time.Now()))
@@ -118,10 +126,10 @@ func TestWithdrawUpdate_FailToUpdateBalance(t *testing.T) {
 
 		mock.ExpectRollback()
 
-		err := db.WithdrawUpdate(sqlDB, initialBalance, txn)
+		err := db.WithdrawUpdate(sqlDB, txn)
 
 		assert.NotNil(t, err)
-		assert.Equal(t, "failed to update balance: db failed", err.Error())
+		assert.Equal(t, "failed to update outgoing-balance: db failed", err.Error())
 
 	})
 }
@@ -146,6 +154,10 @@ func TestTransferUpdate_Success(t *testing.T) {
 
 		mock.ExpectBegin()
 
+		mock.ExpectQuery("SELECT balance FROM wallets WHERE id = \\$1").
+			WithArgs(txnOut.WalletId).
+			WillReturnRows(sqlmock.NewRows([]string{"balance"}).AddRow(initialBalance))
+
 		mock.ExpectQuery("INSERT INTO transactions").
 			WithArgs(txnOut.WalletId, txnOut.Type, txnOut.Amount, txnOut.CounterpartyWalletId).
 			WillReturnRows(sqlmock.NewRows([]string{"id", "created_at"}).AddRow(123, time.Now()))
@@ -164,7 +176,7 @@ func TestTransferUpdate_Success(t *testing.T) {
 
 		mock.ExpectCommit()
 
-		err := db.TransferUpdate(sqlDB, initialBalance, txnOut, txnIn)
+		err := db.TransferUpdate(sqlDB, txnOut, txnIn)
 		assert.Nil(t, err)
 	})
 }
@@ -188,6 +200,10 @@ func TestTransferUpdate_FailToUpdateWithdrawBalance(t *testing.T) {
 
 		mock.ExpectBegin()
 
+		mock.ExpectQuery("SELECT balance FROM wallets WHERE id = \\$1").
+			WithArgs(txnOut.WalletId).
+			WillReturnRows(sqlmock.NewRows([]string{"balance"}).AddRow(initialBalance))
+
 		mock.ExpectQuery("INSERT INTO transactions").
 			WithArgs(txnOut.WalletId, txnOut.Type, txnOut.Amount, txnOut.CounterpartyWalletId).
 			WillReturnRows(sqlmock.NewRows([]string{"id", "created_at"}).AddRow(123, time.Now()))
@@ -197,8 +213,8 @@ func TestTransferUpdate_FailToUpdateWithdrawBalance(t *testing.T) {
 
 		mock.ExpectRollback()
 
-		err := db.TransferUpdate(sqlDB, initialBalance, txnOut, txnIn)
+		err := db.TransferUpdate(sqlDB, txnOut, txnIn)
 		assert.NotNil(t, err)
-		assert.Equal(t, "failed to update outgoing balance: db failed", err.Error())
+		assert.Equal(t, "failed to update outgoing-balance: db failed", err.Error())
 	})
 }
