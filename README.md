@@ -262,6 +262,8 @@ __1. Install Go__
 __2. Install Project Dependencies__
 Use the following commands to install required packages:
 ```
+go get github.com/jackc/pgx/v5
+go get github.com/jackc/pgx/v5/stdlib
 go get github.com/gorilla/mux
 go get github.com/jackc/pgx/v5/stdlib
 go get github.com/shopspring/decimal
