@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"log"
 
 	"github.com/rudithu/CRYPTO-WalletApp/models"
 )
@@ -30,8 +31,15 @@ func TransferUpdate(db *sql.DB, srcTxn *models.Transaction, targetTxn *models.Tr
 		if err != nil {
 			return err
 		}
+
 		// Deposit to target wallet
-		return depositInternal(tx, targetTxn)
+		err = depositInternal(tx, targetTxn)
+		if err != nil {
+			return err
+		}
+
+		log.Printf("transfer from [walled Id: %d] to [wallet Id: %d] completed", srcTxn.WalletId, targetTxn.WalletId)
+		return nil
 	})
 }
 
@@ -41,14 +49,16 @@ func TransferUpdate(db *sql.DB, srcTxn *models.Transaction, targetTxn *models.Tr
 func depositInternal(tx *sql.Tx, txn *models.Transaction) error {
 	err := createTransaction(tx, txn)
 	if err != nil {
+		log.Printf("ERROR: failed to create %s transaction for wallet Id: %d", txn.Type, txn.WalletId)
 		return fmt.Errorf("failed to create incoming-transaction: %w", err)
 	}
 
 	err = incrementBalanceByWalletID(tx, txn.WalletId, txn.Amount)
 	if err != nil {
+		log.Printf("ERROR: failed to update balance on %s transaction for wallet Id: %d", txn.Type, txn.WalletId)
 		return fmt.Errorf("failed to update incoming-balance: %w", err)
 	}
-
+	log.Printf("%s transaction updated for wallet Id: %d", txn.Type, txn.WalletId)
 	return nil
 }
 
@@ -59,22 +69,27 @@ func depositInternal(tx *sql.Tx, txn *models.Transaction) error {
 func withdrawInternal(tx *sql.Tx, txn *models.Transaction) error {
 	balance, err := getWalletBalance(tx, txn.WalletId)
 	if err != nil || balance == nil {
+		log.Printf("ERROR: failed to get balance for wallet Id: %d", txn.WalletId)
 		return fmt.Errorf("failed to get balance")
 	}
 
 	if balance.LessThan(txn.Amount) {
+		log.Printf("ERROR: wallet Id: %d does not have enough balance", txn.WalletId)
 		return fmt.Errorf("not enough balance")
 	}
 
 	err = createTransaction(tx, txn)
 	if err != nil {
+		log.Printf("ERROR: failed to create %s transaction for wallet Id: %d", txn.Type, txn.WalletId)
 		return fmt.Errorf("failed to create outgoing-transaction: %w", err)
 	}
 
 	err = updateBalanceByWalletID(tx, txn.WalletId, balance.Sub(txn.Amount))
 	if err != nil {
+		log.Printf("ERROR: failed to update balance on %s transaction for wallet Id: %d", txn.Type, txn.WalletId)
 		return fmt.Errorf("failed to update outgoing-balance: %w", err)
 	}
+	log.Printf("%s transaction updated for wallet Id: %d", txn.Type, txn.WalletId)
 	return nil
 }
 

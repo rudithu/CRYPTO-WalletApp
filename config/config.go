@@ -31,11 +31,11 @@ func GetConfig() (map[string]string, error) {
 
 		err := viper.ReadInConfig()
 		if err != nil {
-			log.Fatal("Error reading config file:", err)
-			configErr = fmt.Errorf("Error reading config file: %s", err.Error())
+			log.Print("ERROR: Error reading config file:", err)
+			configErr = fmt.Errorf("error reading config file: %s", err.Error())
 			return
 		}
-		fmt.Println("config laoded")
+		log.Println("config laoded")
 		configMap = make(map[string]string)
 		for _, key := range viper.AllKeys() {
 			configMap[key] = viper.GetString(key)
