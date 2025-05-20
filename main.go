@@ -13,8 +13,11 @@ import (
 
 func main() {
 
+	config.InitLog()
+
 	conf, err := config.GetConfig()
 	if err != nil {
+		log.Fatal("failed to load config")
 		return
 	}
 
@@ -28,5 +31,7 @@ func main() {
 	routes.Route(database, r)
 
 	fmt.Printf("starting server on :%s\n", conf[config.APP_PORT])
+	log.Println(fmt.Sprintf("starting server on :%s\n", conf[config.APP_PORT]))
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", conf[config.APP_PORT]), r))
+
 }

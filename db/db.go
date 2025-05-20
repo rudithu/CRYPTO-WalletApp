@@ -13,7 +13,7 @@ func Connnect() (*sql.DB, error) {
 
 	conf, err := config.GetConfig()
 	if err != nil {
-		log.Fatal("error reading config")
+		log.Print("ERROR: error reading config")
 		return nil, err
 	}
 
@@ -22,13 +22,15 @@ func Connnect() (*sql.DB, error) {
 		conf[config.DB_PORT], conf[config.DB_NAME])
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {
-		log.Fatal("Failed to open DB:", err)
+		log.Print("ERROR: Failed to open DB:", err)
+		return nil, err
 	}
 
-	// Optional: ping to ensure DB is reachable
+	// ping to ensure DB is reachable
 	if err := db.Ping(); err != nil {
-		log.Fatal("DB not reachable:", err)
+		log.Print("ERROR: DB not reachable:", err)
+		return nil, err
 	}
-	fmt.Println("db connected")
+	log.Printf("'%s' database connected", conf[config.DB_NAME])
 	return db, nil
 }
