@@ -10,7 +10,11 @@ import (
 	"github.com/rudithu/CRYPTO-WalletApp/models"
 )
 
+// HandleDepositMoney processes a deposit request to add money to a specific wallet.
+// It validates the wallet ID, parses the request body, validates the transaction request,
+// and updates the wallet balance accordingly.
 func (h *HandlerDB) HandleDepositMoney(w http.ResponseWriter, r *http.Request) {
+	// Extract wallet ID from URL path variables
 	vars := mux.Vars(r)
 	walletIdStr := vars["id"]
 
@@ -20,8 +24,8 @@ func (h *HandlerDB) HandleDepositMoney(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Decode the JSON request body into TransactionRequest struct
 	var msg models.TransactionRequest
-
 	err = json.NewDecoder(r.Body).Decode(&msg)
 	if err != nil {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
@@ -39,10 +43,12 @@ func (h *HandlerDB) HandleDepositMoney(w http.ResponseWriter, r *http.Request) {
 		Type:     models.TxnTypeDeposit,
 	}
 
+	// Perform the deposit update in the database
 	err = db.DepositUpdate(h.DB, &t)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
+	// Return HTTP 204 No Content to indicate success without body content
 	w.WriteHeader(http.StatusNoContent)
 }

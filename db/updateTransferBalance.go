@@ -7,28 +7,37 @@ import (
 	"github.com/rudithu/CRYPTO-WalletApp/models"
 )
 
+// DepositUpdate handles the deposit transaction by wrapping depositInternal within a DB transaction.
 func DepositUpdate(db *sql.DB, txn *models.Transaction) error {
 	return withTx(db, func(tx *sql.Tx) error {
 		return depositInternal(tx, txn)
 	})
 }
 
+// WithdrawUpdate handles the withdrawal transaction by wrapping withdrawInternal within a DB transaction.
 func WithdrawUpdate(db *sql.DB, txn *models.Transaction) error {
 	return withTx(db, func(tx *sql.Tx) error {
 		return withdrawInternal(tx, txn)
 	})
 }
 
+// TransferUpdate handles the transfer transaction, performing a withdrawal from source wallet
+// and deposit to target wallet atomically within a DB transaction.
 func TransferUpdate(db *sql.DB, srcTxn *models.Transaction, targetTxn *models.Transaction) error {
 	return withTx(db, func(tx *sql.Tx) error {
+		// Withdraw from source wallet
 		err := withdrawInternal(tx, srcTxn)
 		if err != nil {
 			return err
 		}
+		// Deposit to target wallet
 		return depositInternal(tx, targetTxn)
 	})
 }
 
+// depositInternal performs the core deposit logic:
+// 1. Creates a deposit transaction record.
+// 2. Increments the wallet balance by the deposit amount.
 func depositInternal(tx *sql.Tx, txn *models.Transaction) error {
 	err := createTransaction(tx, txn)
 	if err != nil {
@@ -43,6 +52,10 @@ func depositInternal(tx *sql.Tx, txn *models.Transaction) error {
 	return nil
 }
 
+// withdrawInternal performs the core withdrawal logic:
+// 1. Checks current wallet balance to ensure sufficient funds.
+// 2. Creates a withdrawal transaction record.
+// 3. Updates the wallet balance by subtracting the withdrawal amount.
 func withdrawInternal(tx *sql.Tx, txn *models.Transaction) error {
 	balance, err := getWalletBalance(tx, txn.WalletId)
 	if err != nil || balance == nil {
